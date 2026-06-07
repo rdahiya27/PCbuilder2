@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PCBuilder - Single File Version</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .app {
+            min-height: 100vh;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+
+        .app-header h1 {
+            font-size: 2.3rem;
+            margin-bottom: 10px;
+        }
+
+        .app-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 5px;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+            margin-bottom: 25px;
+        }
+
+        .panel h2 {
+            margin-bottom: 18px;
+            font-size: 1.35rem;
+            color: #222;
+        }
+
+        .budget-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .budget-row label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .budget-input {
+            width: 260px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+
+        .budget-stats {
+            min-width: 260px;
+            padding: 18px 20px;
+            border-radius: 16px;
+            background: #f8f9ff;
+            border: 1px solid #e5e7ff;
+        }
+
+        .budget-stats p {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .budget-stats strong {
+            color: #1e3a8a;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .component-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 18px;
+            border: 1px solid #e5e7ff;
+        }
+
+        .component-card h3 {
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+        }
+
+        .selected-info {
+            background: #f8fbff;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .selected-info p {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .selected-name {
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .selected-price {
+            color: #4f46e5;
+            font-size: 0.95rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+        }
+
+        .dropdown-list {
+            max-height: 280px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid #dbe9ff;
+            background: #ffffff;
+        }
+
+        .dropdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f1f5ff;
+        }
+
+        .dropdown-item:hover {
+            background: #eef2ff;
+        }
+
+        .dropdown-item.selected {
+            background: #dde7ff;
+        }
+
+        .item-name {
+            flex: 1;
+            margin-right: 12px;
+            color: #1f2937;
+        }
+
+        .item-price {
+            color: #4338ca;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+
+        .no-results,
+        .no-selection {
+            color: #6b7280;
+            font-style: italic;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .build-summary,
+        .compatibility-panel {
+            margin-bottom: 25px;
+        }
+
+        .build-summary .component-list,
+        .compatibility-panel .issues-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .build-summary .component-item,
+        .compatibility-panel .issue-item {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .component-type {
+            font-weight: 700;
+            color: #1e3a8a;
+            min-width: 95px;
+        }
+
+        .cost-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 20px;
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+
+        .cost-summary h3,
+        .compatibility-panel h3 {
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .cost-range {
+            font-size: 1.45rem;
+            font-weight: 700;
+        }
+
+        .cost-low,
+        .cost-high {
+            color: #ffe066;
+        }
+
+        .compatibility-panel {
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #e5e7ff;
+            background: #ffffff;
+        }
+
+        .compatibility-panel.compatible {
+            border-left: 6px solid #22c55e;
+        }
+
+        .compatibility-panel.incompatible {
+            border-left: 6px solid #ef4444;
+        }
+
+        .status-card {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+        }
+
+        .status-card.good {
+            background: #ecfdf5;
+            color: #166534;
+        }
+
+        .status-card.warn {
+            background: #ffefeb;
+            color: #b91c1c;
+        }
+
+        .status-icon {
+            font-size: 1.5rem;
+        }
+
+        .recommendations {
+            background: #eef2ff;
+            padding: 16px;
+            border-radius: 14px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .recommendations p {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 760px) {
+            .budget-row,
+            .components-grid {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+
+            .budget-input,
+            .budget-stats {
+                width: 100%;
+            }
+
+            .component-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="app-header">
+            <h1>🖥️ PCBuilder</h1>
+        </div>
+
+        <div class="container">
+            <section class="panel">
+                <h2>💰 Budget</h2>
+                <div class="budget-row">
+                    <div>
+                        <label for="budget-input">Set Your Budget</label>
+                        <input id="budget-input" class="budget-input" type="number" min="0" value="2000">
+                    </div>
+                    <div class="budget-stats">
+                        <p><strong>Budget:</strong> <span id="budget-display">$2000</span></p>
+                        <p><strong>Spent:</strong> <span id="spent-display">$0</span></p>
+                        <p><strong>Remaining:</strong> <span id="remaining-display">$2000</span></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="components-grid" id="components-grid"></section>
+
+            <section class="panel build-summary" id="build-summary-panel">
+                <h2>📊 Build Summary</h2>
+                <div id="build-content">
+                    <p class="no-selection">Select components to see your build summary.</p>
+                </div>
+            </section>
+
+            <section class="panel compatibility-panel compatible" id="compatibility-panel">
+                <h2>🔍 Compatibility Check</h2>
+                <div id="compatibility-content">
+                    <p class="no-selection">Select components to check compatibility.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------------------------------
+        // Data definitions
+        // ----------------------------------------------------------------------------
+        // All available PC component options are stored in this file so the app can
+        // run entirely in the browser without any backend.
+        const componentData = {
+            cpus: [
+                { id: 1, name: 'Intel Core i5-13600K', socket: 'LGA1700', tdp: 125, price_low: 300, price_high: 350 },
+                { id: 2, name: 'Intel Core i7-13700K', socket: 'LGA1700', tdp: 125, price_low: 400, price_high: 450 },
+                { id: 3, name: 'AMD Ryzen 5 7600X', socket: 'AM5', tdp: 105, price_low: 250, price_high: 300 },
+                { id: 4, name: 'AMD Ryzen 7 7700X', socket: 'AM5', tdp: 105, price_low: 350, price_high: 400 },
+                { id: 5, name: 'Intel Core i9-13900K', socket: 'LGA1700', tdp: 150, price_low: 500, price_high: 600 }
+            ],
+            gpus: [
+                { id: 1, name: 'RTX 4060 Ti', power_consumption: 150, price_low: 400, price_high: 450 },
+                { id: 2, name: 'RTX 4070', power_consumption: 200, price_low: 550, price_high: 600 },
+                { id: 3, name: 'RTX 4080', power_consumption: 320, price_low: 1000, price_high: 1100 },
+                { id: 4, name: 'RTX 4090', power_consumption: 450, price_low: 1400, price_high: 1600 },
+                { id: 5, name: 'RX 7600', power_consumption: 150, price_low: 250, price_high: 300 },
+                { id: 6, name: 'RX 7700 XT', power_consumption: 250, price_low: 400, price_high: 450 }
+            ],
+            motherboards: [
+                { id: 1, name: 'ASUS ROG STRIX Z790-E', socket: 'LGA1700', ram_type: 'DDR5', form_factor: 'ATX', price_low: 350, price_high: 400 },
+                { id: 2, name: 'MSI MPG B850-E', socket: 'AM5', ram_type: 'DDR5', form_factor: 'ATX', price_low: 300, price_high: 350 },
+                { id: 3, name: 'NZXT N7 Z790', socket: 'LGA1700', ram_type: 'DDR5', form_factor: 'ATX', price_low: 320, price_high: 370 },
+                { id: 4, name: 'ASUS TUF B850M-PLUS', socket: 'AM5', ram_type: 'DDR5', form_factor: 'Micro-ATX', price_low: 250, price_high: 300 },
+                { id: 5, name: 'Gigabyte Z790 AORUS Master', socket: 'LGA1700', ram_type: 'DDR5', form_factor: 'ATX', price_low: 380, price_high: 430 }
+            ],
+            ram: [
+                { id: 1, name: 'Corsair Vengeance DDR5 32GB', type: 'DDR5', capacity: 32, price_low: 150, price_high: 180 },
+                { id: 2, name: 'G.Skill Trident Z5 32GB', type: 'DDR5', capacity: 32, price_low: 160, price_high: 190 },
+                { id: 3, name: 'Crucial P5 Plus 32GB', type: 'DDR5', capacity: 32, price_low: 140, price_high: 170 },
+                { id: 4, name: 'Kingston Fury Beast 32GB', type: 'DDR5', capacity: 32, price_low: 145, price_high: 175 }
+            ],
+            power_supplies: [
+                { id: 1, name: 'Corsair RM850e 850W', wattage: 850, price_low: 150, price_high: 180 },
+                { id: 2, name: 'EVGA SuperNOVA 750W', wattage: 750, price_low: 120, price_high: 150 },
+                { id: 3, name: 'Seasonic Focus Plus 1000W', wattage: 1000, price_low: 180, price_high: 210 },
+                { id: 4, name: 'Corsair HX1200i 1200W', wattage: 1200, price_low: 220, price_high: 260 }
+            ],
+            cases: [
+                { id: 1, name: 'NZXT H7 Flow', form_factor: 'ATX', price_low: 150, price_high: 180 },
+                { id: 2, name: 'Lian Li Lancool 215', form_factor: 'ATX', price_low: 60, price_high: 90 },
+                { id: 3, name: 'Fractal Design Core 1000', form_factor: 'ATX', price_low: 50, price_high: 70 },
+                { id: 4, name: 'ASUS TUF Gaming GT301', form_factor: 'ATX', price_low: 100, price_high: 130 },
+                { id: 5, name: 'Corsair Crystal 280X', form_factor: 'Micro-ATX', price_low: 140, price_high: 170 }
+            ],
+            storage: [
+                { id: 1, name: 'Samsung 980 Pro 1TB', capacity: 1000, type: 'SSD', price_low: 120, price_high: 150 },
+                { id: 2, name: 'WD Blue SN570 1TB', capacity: 1000, type: 'SSD', price_low: 80, price_high: 110 },
+                { id: 3, name: 'Crucial P5 Plus 1TB', capacity: 1000, type: 'SSD', price_low: 100, price_high: 130 },
+                { id: 4, name: 'Seagate Barracuda 2TB', capacity: 2000, type: 'HDD', price_low: 50, price_high: 70 }
+            ],
+            cooling: [
+                { id: 1, name: 'Noctua NH-D15', max_tdp: 250, price_low: 90, price_high: 110 },
+                { id: 2, name: 'be quiet! Dark Rock Pro 4', max_tdp: 250, price_low: 80, price_high: 100 },
+                { id: 3, name: 'Corsair H150i Elite', max_tdp: 350, price_low: 180, price_high: 210 },
+                { id: 4, name: 'NZXT Kraken X63', max_tdp: 350, price_low: 170, price_high: 200 }
+            ]
+        };
+
+        // Categories define the order and labels shown in the UI.
+        const categories = [
+            { id: 'cpu', label: 'CPU', icon: '⚙️' },
+            { id: 'gpu', label: 'GPU', icon: '🎮' },
+            { id: 'motherboard', label: 'Motherboard', icon: '🔌' },
+            { id: 'ram', label: 'RAM', icon: '💾' },
+            { id: 'psu', label: 'Power Supply', icon: '⚡' },
+            { id: 'case', label: 'Case', icon: '📦' },
+            { id: 'storage', label: 'Storage', icon: '💿' },
+            { id: 'cooling', label: 'Cooling', icon: '❄️' }
+        ];
+
+        // State variables used by the app.
+        let selectedParts = {}; // selected part objects keyed by category id
+        let budget = 2000; // current budget in dollars
+
+        // Initialize the app once the page loads.
+        function init() {
+            renderComponentSelectors(); // create selection cards for each category
+            setupEventListeners(); // wire up all event handlers
+            updateDisplay(); // render initial values
+        }
+
+        // Render the component selector cards into the UI.
+        function renderComponentSelectors() {
+            const grid = document.getElementById('components-grid');
+            grid.innerHTML = '';
+
+            categories.forEach(cat => {
+                const html = `
+                    <div class="component-card">
+                        <h3>${cat.icon} ${cat.label}</h3>
+                        <div class="selected-info" id="${cat.id}-selected">
+                            <p class="no-selection">No component selected</p>
+                        </div>
+                        <input type="text" class="search-input" placeholder="Search parts..." data-category="${cat.id}">
+                        <div class="dropdown-list" id="${cat.id}-dropdown"></div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Return the list of components for a given category identifier.
+        function getComponentList(category) {
+            const lookup = {
+                cpu: 'cpus',
+                gpu: 'gpus',
+                motherboard: 'motherboards',
+                ram: 'ram',
+                psu: 'power_supplies',
+                case: 'cases',
+                storage: 'storage',
+                cooling: 'cooling'
+            };
+
+            return componentData[lookup[category]] || [];
+        }
+
+        // Wire up the budget input and search boxes.
+        function setupEventListeners() {
+            document.getElementById('budget-input').addEventListener('change', (event) => {
+                budget = parseInt(event.target.value, 10) || 0; // keep budget numeric
+                updateDisplay();
+            });
+
+            document.querySelectorAll('.search-input').forEach(input => {
+                input.addEventListener('focus', (event) => {
+                    const category = event.target.dataset.category;
+                    showDropdown(category, '');
+                });
+
+                input.addEventListener('input', (event) => {
+                    const category = event.target.dataset.category;
+                    showDropdown(category, event.target.value);
+                });
+
+                input.addEventListener('blur', (event) => {
+                    // Close dropdown shortly after blur so click events still work.
+                    setTimeout(() => {
+                        const category = event.target.dataset.category;
+                        const dropdown = document.getElementById(`${category}-dropdown`);
+                        if (dropdown) dropdown.style.display = 'none';
+                    }, 150);
+                });
+            });
+        }
+
+        // Show the dropdown list of matching parts for the selected category.
+        function showDropdown(category, searchTerm) {
+            const dropdown = document.getElementById(`${category}-dropdown`);
+            const list = getComponentList(category);
+            const filtered = list.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+            dropdown.innerHTML = filtered.length > 0
+                ? filtered.map(item => `
+                    <div class="dropdown-item ${selectedParts[category]?.id === item.id ? 'selected' : ''}" onclick="selectComponent('${category}', ${item.id})">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">$${item.price_low} - $${item.price_high}</div>
+                    </div>
+                `).join('')
+                : '<div class="no-results">No components found</div>';
+
+            dropdown.style.display = 'block';
+        }
+
+        // Update selected part state and refresh the UI.
+        function selectComponent(category, componentId) {
+            const part = getComponentList(category).find(item => item.id === componentId);
+            if (!part) return;
+
+            selectedParts[category] = part;
+            document.querySelector(`input[data-category="${category}"]`).value = '';
+            document.getElementById(`${category}-dropdown`).style.display = 'none';
+            updateDisplay();
+        }
+
+        // Compute the total cost range for the selected build.
+        function calculateTotalCost() {
+            return Object.values(selectedParts).reduce((totals, part) => {
+                if (!part) return totals;
+                totals.low += part.price_low || 0;
+                totals.high += part.price_high || 0;
+                return totals;
+            }, { low: 0, high: 0 });
+        }
+
+        // Check compatibility between selected components.
+        function checkCompatibility() {
+            const issues = [];
+            const cpu = selectedParts.cpu;
+            const motherboard = selectedParts.motherboard;
+            const ram = selectedParts.ram;
+            const cooler = selectedParts.cooling;
+            const pcCase = selectedParts.case;
+            const gpu = selectedParts.gpu;
+
+            if (cpu && motherboard && cpu.socket !== motherboard.socket) {
+                issues.push(`Socket mismatch: CPU ${cpu.socket} vs motherboard ${motherboard.socket}`);
+            }
+
+            if (ram && motherboard && ram.type !== motherboard.ram_type) {
+                issues.push(`RAM type mismatch: ${ram.type} vs motherboard ${motherboard.ram_type}`);
+            }
+
+            if (cooler && cpu && cpu.tdp > cooler.max_tdp) {
+                issues.push(`Cooler too weak: CPU TDP ${cpu.tdp}W exceeds cooler max ${cooler.max_tdp}W`);
+            }
+
+            if (pcCase && motherboard && motherboard.form_factor === 'ATX' && pcCase.form_factor === 'Micro-ATX') {
+                issues.push('Case too small: Micro-ATX case cannot fit ATX motherboard');
+            }
+
+            // Recommend PSU wattage with 20% headroom.
+            let recommendedWattage = 0;
+            if (cpu) recommendedWattage += cpu.tdp;
+            if (gpu) recommendedWattage += gpu.power_consumption;
+            recommendedWattage = Math.ceil(recommendedWattage * 1.2);
+
+            return {
+                issues,
+                recommendedWattage,
+                compatible: issues.length === 0
+            };
+        }
+
+        // Refresh every visible part of the page.
+        function updateDisplay() {
+            updateSelections();
+            updateBudget();
+            updateBuildSummary();
+            updateCompatibility();
+        }
+
+        // Render the selected component name and price in each card.
+        function updateSelections() {
+            categories.forEach(cat => {
+                const target = document.getElementById(`${cat.id}-selected`);
+                const part = selectedParts[cat.id];
+
+                if (!part) {
+                    target.innerHTML = '<p class="no-selection">No component selected</p>';
+                } else {
+                    target.innerHTML = `
+                        <p class="selected-name">${part.name}</p>
+                        <p class="selected-price">$${part.price_low} - $${part.price_high}</p>
+                    `;
+                }
+            });
+        }
+
+        // Update the budget display values in the UI.
+        function updateBudget() {
+            const total = calculateTotalCost();
+            const remaining = Math.max(0, budget - total.low);
+            document.getElementById('budget-display').textContent = `$${budget.toLocaleString()}`;
+            document.getElementById('spent-display').textContent = `$${total.low.toLocaleString()} - $${total.high.toLocaleString()}`;
+            document.getElementById('remaining-display').textContent = `$${remaining.toLocaleString()}`;
+        }
+
+        // Update the build summary section based on current selections.
+        function updateBuildSummary() {
+            const content = document.getElementById('build-content');
+            const total = calculateTotalCost();
+            const selectedKeys = Object.keys(selectedParts).filter(key => selectedParts[key]);
+
+            if (selectedKeys.length === 0) {
+                content.innerHTML = '<p class="no-selection">Select components to see your build summary.</p>';
+                return;
+            }
+
+            const listItems = selectedKeys.map(key => {
+                const label = categories.find(c => c.id === key)?.label || key;
+                const part = selectedParts[key];
+                return `
+                    <li class="component-item">
+                        <span class="component-type">${label}:</span>
+                        <span class="component-name">${part.name}</span>
+                    </li>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <ul class="component-list">${listItems}</ul>
+                <div class="cost-summary">
+                    <h3>Estimated Cost Range:</h3>
+                    <p class="cost-range"><span class="cost-low">$${total.low.toLocaleString()}</span> - <span class="cost-high">$${total.high.toLocaleString()}</span></p>
+                </div>
+            `;
+        }
+
+        // Render the compatibility status and warnings.
+        function updateCompatibility() {
+            const content = document.getElementById('compatibility-content');
+            const panel = document.getElementById('compatibility-panel');
+            const result = checkCompatibility();
+            const selectedKeys = Object.keys(selectedParts).filter(key => selectedParts[key]);
+
+            if (selectedKeys.length === 0) {
+                panel.className = 'panel compatibility-panel compatible';
+                content.innerHTML = '<p class="no-selection">Select components to check compatibility.</p>';
+                return;
+            }
+
+            panel.className = `panel compatibility-panel ${result.compatible ? 'compatible' : 'incompatible'}`;
+
+            const status = result.compatible
+                ? '<div class="status-card good"><span class="status-icon">✓</span><p>All selected parts appear compatible.</p></div>'
+                : '<div class="status-card warn"><span class="status-icon">⚠️</span><p>Some compatibility issues were found.</p></div>';
+
+            const issues = result.issues.length > 0
+                ? `<div class="issues-list"><h3>Issues Found:</h3>${result.issues.map(issue => `<li class="issue-item">${issue}</li>`).join('')}</div>`
+                : '';
+
+            const recommendation = `
+                <div class="recommendations">
+                    <p><strong>Recommended PSU Wattage:</strong> ${result.recommendedWattage}W or higher</p>
+                    <p>Includes a 20% headroom estimate for stability.</p>
+                </div>
+            `;
+
+            content.innerHTML = `${status}${issues}${recommendation}`;
+        }
+
+        // Start the app.
+        init();
+    </script>
+</body>
+</html>
